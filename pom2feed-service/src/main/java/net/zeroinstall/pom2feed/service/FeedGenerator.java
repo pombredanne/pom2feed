@@ -5,19 +5,15 @@ import java.io.IOException;
 import java.net.URL;
 import javax.xml.xpath.XPathExpressionException;
 import net.zeroinstall.model.InterfaceDocument;
-import static net.zeroinstall.publish.FeedUtils.getFeedString;
-import net.zeroinstall.pom2feed.core.FeedBuilder;
-import net.zeroinstall.pom2feed.core.MavenMetadata;
+import net.zeroinstall.pom2feed.core.*;
 import static net.zeroinstall.pom2feed.core.MavenUtils.*;
 import static net.zeroinstall.pom2feed.core.UrlUtils.*;
+import static net.zeroinstall.publish.FeedUtils.getFeedString;
 import org.apache.maven.model.*;
 import org.apache.maven.model.building.*;
-import org.apache.maven.model.resolution.InvalidRepositoryException;
-import org.apache.maven.model.resolution.ModelResolver;
-import org.apache.maven.model.resolution.UnresolvableModelException;
+import org.apache.maven.model.resolution.*;
+import org.slf4j.*;
 import org.xml.sax.SAXException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Generates Zero Install feeds for Maven artifacts on demand.
@@ -128,12 +124,22 @@ public class FeedGenerator implements FeedProvider {
         }
 
         @Override
-        public void addRepository(Repository repository) throws InvalidRepositoryException {
+        public ModelSource resolveModel(Parent parent) throws UnresolvableModelException {
+            return new UrlModelSource(getArtifactFileUrl(mavenRepository,
+                    parent.getGroupId(), parent.getArtifactId(), parent.getVersion(), "pom"));
+        }
+
+        @Override
+        public void addRepository(Repository repository) {
+        }
+
+        @Override
+        public void addRepository(Repository rpstr, boolean bln) {
         }
 
         @Override
         public ModelResolver newCopy() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new RepositoryModelResolver();
         }
     }
 }

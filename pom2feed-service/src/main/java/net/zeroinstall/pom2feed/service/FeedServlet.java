@@ -2,6 +2,7 @@ package net.zeroinstall.pom2feed.service;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import java.io.*;
+import static java.lang.System.getProperty;
 import java.net.URL;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
@@ -43,14 +44,11 @@ public class FeedServlet
 
     public FeedServlet() throws IOException {
         // Load configuration from Java system properties
-        this.serviceURL = ensureSlashEnd(new URL(
-                System.getProperty("pom2feed-service.serviceURL", "http://maven.0install.net/")));
+        this.serviceURL = ensureSlashEnd(new URL(getProperty("pom2feed-service.serviceURL", "http://maven.0install.net/")));
         LOGGER.info("pom2feed-service.serviceURL=" + serviceURL);
-        URL mavenRepository = ensureSlashEnd(new URL(
-                System.getProperty("pom2feed-service.mavenRepository", "http://repo.maven.apache.org/maven2/")));
+        URL mavenRepository = ensureSlashEnd(new URL(getProperty("pom2feed-service.mavenRepository", "http://repo.maven.apache.org/maven2/")));
         LOGGER.info("pom2feed-service.mavenRepository=" + mavenRepository);
-        String gnuPGKey =
-                System.getProperty("pom2feed-service.gnuPGKey", null);
+        String gnuPGKey = getProperty("pom2feed-service.gnuPGKey", null);
         LOGGER.info("pom2feed-service.gnuPGKey=" + gnuPGKey);
 
         // Load files into memory
@@ -58,9 +56,8 @@ public class FeedServlet
         if (isNullOrEmpty(gpgKeyData)) {
             LOGGER.warn("No GnuPG key data loaded!");
         }
-        this.xslData = readAll(FeedServlet.class.getResourceAsStream("/interface.xsl"));
-        this.cssData = readAll(FeedServlet.class.getResourceAsStream("/interface.css"));
-
+        this.xslData = readAll(FeedServlet.class.getResourceAsStream("/feed.xsl"));
+        this.cssData = readAll(FeedServlet.class.getResourceAsStream("/feed.css"));
 
         this.feedProvider = new FeedCache(new FeedGenerator(mavenRepository, serviceURL, gnuPGKey));
     }
@@ -75,9 +72,9 @@ public class FeedServlet
             respondWelcome(resp);
         } else if (path.endsWith(".gpg")) {
             respondGnuPGKey(resp);
-        } else if (path.endsWith("/interface.xsl")) {
+        } else if (path.endsWith("/feed.xsl")) {
             respond(resp, "text/xml", xslData);
-        } else if (path.endsWith("/interface.css")) {
+        } else if (path.endsWith("/feed.css")) {
             respond(resp, "text/css", cssData);
         } else {
             String artifactPath = path.substring(1);
